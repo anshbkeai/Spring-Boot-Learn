@@ -46,3 +46,7 @@ The response will only be returned if the request's Accept header is set to:
 
 Accept: application/version2+json
 ```
+
+**Things yet to be Covered **
+1,Rate limiting 
+2.  auth using the API key
