@@ -103,3 +103,13 @@ registry.addEndpoint("/ws")
 ```
 
 
+**MAIN  TABLE  DIFFERENCE**
+| Concept                     | REST Security                        | WebSocket Security                                   |
+|----------------------------|--------------------------------------|-----------------------------------------------------|
+| Request                     | HTTP Request (GET/POST/etc.)        | STOMP Message over WebSocket                        |
+| Authentication              | `UsernamePasswordAuthenticationToken`, JWT, etc. | WebSocket handshake authentication                 |
+| Authorization               | Secured by `antMatchers()`          | Secured by `simpDestMatchers()` or message matchers |
+| Filter Chain                | `SecurityFilterChain`               | `AuthorizationManager<Message<?>>` for messaging    |
+| Endpoint access             | `/api/**`                           | `/app/**`, `/topic/**`, `/queue/**`, `/user/**`     |
+| Stateless sessions (JWT)    | Common with `SessionCreationPolicy.STATELESS` | Often tied to WebSocket session                    |
+
