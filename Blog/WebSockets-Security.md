@@ -113,3 +113,106 @@ registry.addEndpoint("/ws")
 | Endpoint access             | `/api/**`                           | `/app/**`, `/topic/**`, `/queue/**`, `/user/**`     |
 | Stateless sessions (JWT)    | Common with `SessionCreationPolicy.STATELESS` | Often tied to WebSocket session                    |
 
+
+----
+
+
+## 🔐 WebSocket Security with JWT in Spring Boot – Industry-Aligned Summary
+
+### 📌 Objective
+
+Secure a WebSocket endpoint (`/ws`) using JWT, ensuring only authenticated users can connect and access specific messaging channels.
+
+---
+
+## ✅ Components Used
+
+### 1. **HandshakeInterceptor (Authentication)**
+
+* Intercepts the initial HTTP handshake (`/ws/info`, `/ws/123/xyz`) before WebSocket upgrade.
+* Extracts JWT token from the **query parameter** (`?token=...`).
+* Validates the token using `JwtTokenProvider`.
+* Creates an `Authentication` object and saves it to the WebSocket session.
+
+✅ **Why this is needed**: WebSockets do not support headers after the initial upgrade, so tokens must be passed here.
+
+---
+
+### 2. **ChannelInterceptor (STOMP Authentication Binding)**
+
+* Runs on every STOMP frame (`CONNECT`, `SUBSCRIBE`, `SEND`).
+* Retrieves the `Authentication` from session attributes.
+* Injects it into `SimpMessageHeaderAccessor` using `setUser()`.
+
+✅ **Why this is needed**: Without this, Spring won’t recognize the user’s identity during message sending/subscribing.
+
+---
+
+### 3. **AuthorizationManager (Message-Level Security)**
+
+* Introduced in Spring Security 6.
+* Used in `MessageSecurityMetadataSourceRegistry` to secure STOMP endpoints.
+
+**Example**:
+
+```java
+authorizeDestination("/app/**").hasRole("USER")
+authorizeDestination("/topic/admin/**").hasRole("ADMIN")
+```
+
+✅ **Why this is needed**: Enforces access control on who can send or subscribe to specific channels.
+
+---
+
+## ⚙️ Architecture Flow
+
+1. **Client connects to `/ws?token=JWT`**
+2. `HandshakeInterceptor` validates token → stores Authentication in session.
+3. `ChannelInterceptor` injects the authenticated user into message context.
+4. `AuthorizationManager` checks user roles on every message destination.
+5. Messages are processed or rejected accordingly.
+
+---
+
+## 🧠 Key Concepts
+
+| Term                   | Purpose                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| `HandshakeInterceptor` | Authenticates JWT at initial WebSocket upgrade                       |
+| `ChannelInterceptor`   | Binds user to STOMP message lifecycle (setUser)                      |
+| `AuthorizationManager` | Authorizes access to STOMP endpoints by roles                        |
+| Stateless REST         | JWT stored client-side, no session                                   |
+| Stateful WS            | WebSocket maintains session per connection (uses STOMP user context) |
+
+---
+
+## 🔒 Industry Standards & Best Practices
+
+| Practice                                                    | Industry Valid?    | Notes                                       |
+| ----------------------------------------------------------- | ------------------ | ------------------------------------------- |
+| JWT token in query param for `/ws`                          | ✅ Yes (with HTTPS) | Required workaround; secure via HTTPS       |
+| Validating token in `HandshakeInterceptor`                  | ✅ Yes              | Equivalent to stateless filter chain for WS |
+| Using `ChannelInterceptor` to inject principal              | ✅ Yes              | Enables message-level security              |
+| Role-based message authorization via `AuthorizationManager` | ✅ Yes              | Recommended by Spring Security team         |
+
+---
+
+## ⚠️ Common Mistakes to Avoid
+
+* ❌ Relying on header-only auth in WebSockets (not supported post-handshake)
+* ❌ Skipping `ChannelInterceptor` → message user becomes `null`
+* ❌ Not securing `/topic/**` or `/app/**` → allows open broadcast
+
+---
+
+## ✅ Summary
+
+You implemented a production-grade WebSocket security model using:
+
+* JWT + `HandshakeInterceptor` for stateless authentication
+* `ChannelInterceptor` for session binding
+* `AuthorizationManager` for fine-grained access control
+
+This pattern is aligned with **modern Spring Boot and enterprise-grade security practices**.
+
+---
