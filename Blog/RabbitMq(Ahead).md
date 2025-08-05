@@ -1,4 +1,4 @@
-
+[Diagram Join TARO](https://www.tldraw.com/f/FSPmrIbEnoILG2bhyI51m?d=v-368.-112.2569.1755.alvSx6P4vbKjb37u-9NVM)
 
 ## 🚀 Key RabbitMQ Concepts You Need to Master as a Backend Developer
 
