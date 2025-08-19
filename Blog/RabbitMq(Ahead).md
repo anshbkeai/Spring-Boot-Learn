@@ -153,3 +153,88 @@ Use:
 | Retry logic         | Use Spring Retry to handle temporary consumer failures           |
 
 ---
+
+---
+
+### 🔑 Common RabbitMQ Queue Arguments
+
+1. **Dead-lettering**
+
+   * `"x-dead-letter-exchange"` → Exchange to which messages should be republished if they are dead-lettered.
+   * `"x-dead-letter-routing-key"` → Routing key to use when republishing dead-lettered messages.
+
+---
+
+2. **TTL (Time-To-Live)**
+
+   * `"x-message-ttl"` → Time (ms) before a message expires (per-message basis in the queue).
+   * `"x-expires"` → Time (ms) after which the **queue itself** is deleted if unused.
+
+---
+
+3. **Queue length & size limits**
+
+   * `"x-max-length"` → Maximum number of messages the queue can hold. Oldest ones are dropped when limit is reached.
+   * `"x-max-length-bytes"` → Maximum size (in bytes) for all messages in the queue. Oldest messages are dropped when exceeded.
+
+---
+
+4. **Overflow behavior**
+
+   * `"x-overflow"` → What happens when max length/size is exceeded. Options:
+
+     * `"drop-head"` (default: drops oldest messages)
+     * `"reject-publish"` (rejects new messages instead of dropping old)
+
+---
+
+5. **Priority queues**
+
+   * `"x-max-priority"` → Enables priority support. Value is the max priority (e.g., 10). Messages with higher priority are delivered first.
+
+---
+
+6. **Lazy queues (better for memory usage)**
+
+   * `"x-queue-mode"` →
+
+     * `"default"` → messages kept in RAM as much as possible.
+     * `"lazy"` → messages are written to disk to save memory, only loaded when needed.
+
+---
+
+7. **Queue type (Classic vs Quorum vs Stream)**
+
+   * `"x-queue-type"` →
+
+     * `"classic"` (default, traditional queue)
+     * `"quorum"` (highly available, replicated queue for durability)
+     * `"stream"` (for event streaming use cases, like Kafka-lite).
+
+---
+
+### ✅ Example with multiple arguments
+
+```java
+Map<String, Object> arguments = new HashMap<>();
+arguments.put("x-dead-letter-exchange", "inventory.dlq.exchange");
+arguments.put("x-dead-letter-routing-key", "inventory.dlq");
+arguments.put("x-message-ttl", 60000);           // 1 min TTL
+arguments.put("x-max-length", 1000);             // max 1000 messages
+arguments.put("x-max-priority", 10);             // priority queue
+arguments.put("x-queue-mode", "lazy");           // store on disk
+arguments.put("x-queue-type", "quorum");         // HA quorum queue
+```
+
+---
+
+👉 As a **future engineer**, the most critical ones you’ll use day-to-day are:
+
+* DLQ (`x-dead-letter-exchange`, `x-dead-letter-routing-key`)
+* TTL (`x-message-ttl`)
+* Length limits (`x-max-length`)
+* Priority (`x-max-priority`)
+* Queue mode (`x-queue-mode`)
+
+---
+
